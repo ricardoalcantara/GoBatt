@@ -1,8 +1,6 @@
 package core
 
 import (
-	"github.com/gin-gonic/gin"
-	ginmodule "github.com/ricardoalcantara/GoBatt/internal/gin-module"
 	"github.com/ricardoalcantara/GoBatt/internal/logger"
 	"github.com/rs/zerolog/log"
 	"go.uber.org/dig"
@@ -11,25 +9,12 @@ import (
 func NewGoBatt() GoBatt {
 	container := dig.New()
 	container.Provide(logger.NewLogger)
-	container.Provide(ginmodule.NewGinModule)
 	container.Provide(func() *GoBatt {
 		return &GoBatt{}
 	})
 
-	var engine *gin.Engine
-	var _logger logger.ILogger
-	err := container.Invoke(func(r *gin.Engine, l logger.ILogger) {
-		engine = r
-		_logger = l
-	})
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to start server")
-	}
-
 	goBatt := GoBatt{
 		container: container,
-		logger:    _logger,
-		engine:    engine,
 	}
 
 	return goBatt
@@ -38,10 +23,10 @@ func NewGoBatt() GoBatt {
 type GoBatt struct {
 	container *dig.Container
 	logger    logger.ILogger
-	engine    *gin.Engine
+	engine    IEngine
 }
 
-func (g *GoBatt) Engine() *gin.Engine {
+func (g *GoBatt) Engine() IEngine {
 	return g.engine
 }
 
@@ -63,10 +48,18 @@ func (g *GoBatt) AddModule(module IModule) {
 }
 
 func (g *GoBatt) Start() {
-	g.engine.Run()
-}
+	var engine IEngine
+	var _logger logger.ILogger
+	err := g.container.Invoke(func(e IEngine, l logger.ILogger) {
+		engine = e
+		_logger = l
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to start server")
+	}
 
-type IModule interface {
-	Register(*GoBatt)
-	Init(*GoBatt)
+	g.engine = engine
+	g.logger = _logger
+
+	g.engine.Run()
 }

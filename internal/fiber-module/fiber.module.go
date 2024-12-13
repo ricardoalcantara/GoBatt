@@ -1,33 +1,34 @@
-package ginmodule
+package fibermodule
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/ricardoalcantara/GoBatt/internal/core"
 )
 
-func NewGinModule() core.IEngine {
-	r := gin.Default()
-	return &Engine{engine: r}
+func NewFiberModule() core.IEngine {
+	app := fiber.New()
+	return &Engine{engine: app}
 }
 
 type Engine struct {
-	engine *gin.Engine
+	engine *fiber.App
 }
 
 func (g Engine) Run() {
-	g.engine.Run(":8080")
+	g.engine.Listen(":8080")
 }
 
 func (g Engine) GET(path string, handler func(core.IContext)) {
-	g.engine.GET(path, func(ctx *gin.Context) {
+	g.engine.Get(path, func(ctx *fiber.Ctx) error {
 		handler(&Context{ctx: ctx})
+		return nil
 	})
 }
 
 type Context struct {
-	ctx *gin.Context
+	ctx *fiber.Ctx
 }
 
 func (c *Context) String(code int, message string) {
-	c.ctx.String(code, message)
+	c.ctx.Status(code).SendString(message)
 }
