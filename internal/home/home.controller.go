@@ -1,10 +1,8 @@
 package home
 
 import (
-	"net/http"
-
-	"github.com/ricardoalcantara/GoBatt/internal/core"
-	"github.com/ricardoalcantara/GoBatt/internal/logger"
+	"github.com/ricardoalcantara/GoBatt/pkg/core"
+	"github.com/ricardoalcantara/GoBatt/pkg/logger"
 )
 
 type HomeController struct {
@@ -17,7 +15,8 @@ func NewHomeController(engine core.IEngine, logger logger.ILogger, homeService *
 		logger:      logger,
 		homeService: homeService,
 	}
-	engine.GET("/", controller.Index)
+	engine.Get("/", controller.Index)
+	engine.Get("/json", controller.Json)
 
 	return &controller
 }
@@ -25,5 +24,11 @@ func NewHomeController(engine core.IEngine, logger logger.ILogger, homeService *
 func (c *HomeController) Index(ctx core.IContext) {
 	c.logger.Info("Index")
 	index := c.homeService.Index()
-	ctx.String(http.StatusOK, index)
+	ctx.String(index)
+}
+
+func (c *HomeController) Json(ctx core.IContext) {
+	c.logger.Info("Json")
+	json := c.homeService.Json()
+	ctx.Json(json)
 }

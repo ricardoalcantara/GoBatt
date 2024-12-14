@@ -1,7 +1,7 @@
 package home
 
 import (
-	"github.com/ricardoalcantara/GoBatt/internal/core"
+	"github.com/ricardoalcantara/GoBatt/pkg/core"
 )
 
 type HomeModule struct {
